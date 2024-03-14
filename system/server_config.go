@@ -21,6 +21,8 @@ var (
 
 type ServerConfig struct {
 	Log struct {
+		Access   string `json:"access,omitempty"`
+		Error    string `json:"error,omitempty"`
 		Loglevel string `json:"loglevel"`
 	} `json:"log"`
 	Inbounds []struct {
