@@ -7,6 +7,7 @@ import (
 	"github.com/clearcodecn/v2ray-core/v2raystart"
 	"github.com/make-money-fast/v2ray/helpers"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -17,6 +18,10 @@ import (
 var (
 	//go:embed default_server_config.json
 	defaultServerConfig string
+)
+
+const (
+	google = "https://www.google.com"
 )
 
 type ServerConfig struct {
@@ -198,7 +203,21 @@ func GetServerProxyState() int {
 		return StateServerOff
 	}
 
-	ok := testConnection()
+	// 1. download Client config.
+	rsp, _ := http.Get(fmt.Sprintf("http://localhost%s/server/client.json", helpers.HttpPort))
+	if rsp == nil {
+		return StateServerOn
+	}
+	data, _ := ioutil.ReadAll(rsp.Body)
+	rsp.Body.Close()
+
+	path := filepath.Join("client.test.json")
+	ioutil.WriteFile(path, data, 0777)
+	defer func() {
+		os.Remove(path)
+	}()
+
+	ok := testConnection(path)
 
 	if ok {
 		return StateProxyOK
@@ -207,11 +226,11 @@ func GetServerProxyState() int {
 	return StateServerOn
 }
 
-func testConnection() bool {
+func testConnection(path string) bool {
 	ch := make(chan struct{})
 	defer close(ch)
 
-	clientServer, err := v2raystart.Start(fmt.Sprintf("http://localhost%s/server/client.json", helpers.HttpPort), stopChan)
+	clientServer, err := v2raystart.Start(path, stopChan)
 	if err != nil {
 		return false
 	}
@@ -221,7 +240,84 @@ func testConnection() bool {
 
 	defer clientServer.Close()
 
-	proxyUrl, _ := url.Parse(fmt.Sprintf("http://localhost:%d", helpers.ServerTestPort))
+	return CheckPorxy(fmt.Sprintf("http://localhost:%d", helpers.ServerTestPort), google)
+}
+
+type ClientState struct {
+	IsRunning       bool `json:"isRunning"`
+	Socks           bool `json:"socks"`
+	Http            bool `json:"http"`
+	ConnectToServer bool `json:"connectToServer"`
+	PorxyOK         bool `json:"porxyOK"`
+}
+
+// GetClientProxyState 获取客户端代理状态.
+func GetClientProxyState() ClientState {
+	state := ClientState{}
+	// 1. socks.
+	cfg, err := LoadClientConfig()
+	if err != nil {
+		return state
+	}
+	var (
+		sockPort   int
+		httpPort   int
+		serverAddr string
+	)
+	for _, inbound := range cfg.Inbounds {
+		if inbound.Tag == "socks" {
+			sockPort = inbound.Port
+		}
+		if inbound.Tag == "http" {
+			httpPort = inbound.Port
+		}
+	}
+	if len(cfg.Outbounds) > 0 && len(cfg.Outbounds[0].Settings.Vnext) > 0 {
+		serverAddr = fmt.Sprintf("%s:%d", cfg.Outbounds[0].Settings.Vnext[0].Address, cfg.Outbounds[0].Settings.Vnext[0].Port)
+	}
+
+	if IsRunning() {
+		state.IsRunning = true
+	} else {
+		return state
+	}
+
+	if sockPort > 0 && checkPort(sockPort) {
+		state.Socks = true
+	}
+
+	if httpPort > 0 && checkPort(httpPort) {
+		state.Http = true
+	}
+
+	if len(serverAddr) > 0 && checkPort(serverAddr) {
+		state.ConnectToServer = true
+	}
+
+	if CheckPorxy(fmt.Sprintf("http://localhost:%d", httpPort), google) {
+		state.PorxyOK = true
+	}
+	return state
+}
+
+func checkPort(addr interface{}) bool {
+	var dst string
+	switch v := addr.(type) {
+	case string:
+		dst = v
+	case int:
+		dst = fmt.Sprintf("127.0.0.1:%d", v)
+	}
+	conn, err := net.Dial("tcp", dst)
+	if err != nil {
+		return false
+	}
+	conn.Close()
+	return true
+}
+
+func CheckPorxy(u string, dst string) bool {
+	proxyUrl, _ := url.Parse(u)
 
 	cli := &http.Client{
 		Transport: &http.Transport{
@@ -230,7 +326,7 @@ func testConnection() bool {
 		Timeout: 5 * time.Second,
 	}
 
-	resp, err := cli.Get("https://www.baidu.com")
+	resp, err := cli.Get(dst)
 	if err != nil {
 		return false
 	}

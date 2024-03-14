@@ -5,11 +5,13 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>V2ray-Server</title>
+    <title>V2ray-Client</title>
+    <link rel="shortcut icon" href="/static/favicon.ico">
     <link rel="stylesheet" href="/static/css/bootstrap.css">
     <link rel="stylesheet" href="/static/css/element-ui.min.css">
     <link rel="stylesheet" href="/static/editor/css/editormd.css">
     <link rel="stylesheet" href="/static/css/sweetalert.css">
+    <link rel="stylesheet" href="/static/css/md.css">
 </head>
 <body>
 
@@ -18,7 +20,7 @@
         <div class="col-md-12">
             <el-card class="box-card">
                 <div slot="header" class="clearfix">
-                    <span>V2ray 服务端管理面板 <el-tag type="danger">{{ version }}</el-tag></span>
+                    <span>V2ray 客户端管理面板 <el-tag type="danger">{{ version }}</el-tag></span>
                 </div>
                 <div class="d-flex justify-content-between">
                     <span>运行状态</span>
@@ -33,21 +35,49 @@
                     <span>配置文件路径</span>
                     <el-tag type="success">{{ configPath }}</el-tag>
                 </div>
+                <div class="d-flex justify-content-between mt-2">
+                    <span>http代理</span>
+                    <el-tag type="success" class="copy">{{ httpProxy }}</el-tag>
+                </div>
 
+                <div class="d-flex justify-content-between mt-2">
+                    <span>chrome插件商店</span>
+                    <el-link target="_blank" type="primary" href="https://chromewebstore.google.com/detail/proxy-switchyomega/padekgcemlokbadohgkifijomclgjgif?hl=zh-CN&utm_source=ext_sidebar">chrome插件商店</el-link>
+                </div>
+                <div class="d-flex justify-content-between mt-2">
+                    <span>socks代理</span>
+                    <el-tag type="success" class="copy">{{ socksPorxy }}</el-tag>
+                </div>
 
                 <div class="d-flex justify-content-center mt-2">
                     <el-input v-model="vmess" placeholder="请输入vmess链接"></el-input>
                     <el-button type="primary" class="mx-2" @click="importVmess">导入vmess</el-button>
+                </div>
+
+                <div class="d-flex justify-content-center mt-2">
+                    <el-input v-model="url" placeholder=""></el-input>
+                    <el-button type="primary" class="mx-2" @click="checkUrl">测试代理</el-button>
+                </div>
+
+                <div class="d-flex justify-content-center mt-2">
+                    <el-button type="primary" class="mx-2" @click="configSysProxy">配置系统代理</el-button>
+                    <el-button type="danger" class="mx-2" @click="unsetSysProxy">清除系统代理</el-button>
+                    <el-link target="_blank" type="warning" class="mx-2" href="/client/helper">帮助页</el-link>
                 </div>
             </el-card>
             <div class="row">
                 <div class="col-md-8">
                     <el-card class="box-card mt-2">
                         <div slot="header" class="clearfix">
-                            <span>V2ray 服务端管理面板</span>
+                            <span>V2ray 客户端管理面板</span>
                         </div>
                         <div class="d-flex justify-content-between">
                             <div id="editor"></div>
+                        </div>
+
+                        <div class="d-flex flex-column justify-content-between mt-2">
+                            <h6>tips</h6>
+                            <div class="p-4 markdown-body" v-html='gitHtml'></div>
                         </div>
                     </el-card>
                 </div>
@@ -56,17 +86,30 @@
                         <div slot="header" class="clearfix">
                             <span>Vmess信息</span>
                         </div>
-                        <el-image src="/server/vmess"></el-image>
+                        <el-image src="/client/vmess"></el-image>
                     </el-card>
 
                     <el-card class="box-card mt-2">
                         <div slot="header" class="clearfix">
-                            <span>V2ray 服务端管理面板</span>
+                            <span>V2ray 客户端管理面板</span>
                         </div>
                         <div>
                             <h3>配置修改点</h3>
-                            <p>端口: <code>inbounds[0].port</code></p>
-                            <p>uuid: <code>inbounds[0].settings.clients[0].id</code></p>
+                            <div class="d-flex justify-content-between">
+                                <p class="fs-6">socks: <code>inbounds[0][tag=scoks].port</code></p>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <p class="fs-6">http: <code>inbounds[0][tag=http].port</code></p>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <p class="fs-6">服务器端口:<code>vnext.address</code></p>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <p class="fs-6">服务器ip:<code>vnext.ip</code></p>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <p class="fs-6">服务器uid:<code>vnext.users.id</code></p>
+                            </div>
                         </div>
                         <div>
                             <el-button type="primary" @click="initDefaultConfig">初始化配置</el-button>
@@ -75,8 +118,9 @@
                     </el-card>
 
                     <el-card class="box-card mt-2">
-                        <div slot="header" class="clearfix">
-                            <span>代理状态 服务端自检</span>
+                        <div slot="header" class="clearfix d-flex justify-content-between align-items-center">
+                            <span>代理状态 客户端自检</span>
+                            <span><el-button @click="getState" icon="el-icon-refresh-left" type="primary" circle></el-button></span>
                         </div>
                         <div class="block">
                             <el-timeline>
@@ -107,6 +151,7 @@
 <script src="/static/editor/editormd.min.js"></script>
 <script src="/static/js/sweetalert.min.js"></script>
 <script src="/static/js/clipboard.min.js"></script>
+<script src="/static/js/markdown.js"></script>
 <script src="/static/js/client.js"></script>
 </body>
 </html>

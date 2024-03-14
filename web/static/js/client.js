@@ -2,19 +2,25 @@ console.log(data);
 
 const green = '#0bbd87';
 const gray = '#cccccc'
+const red = '#eb5851'
 
 data.editor = null;
+data.gitHtml = '';
+data.url = "https://www.google.com"
 data.state =  [{
     content: '运行状态',
     color: gray
-}, {
-    content: '端口是否启动',
+},{
+    content: 'socks端口',
     color: gray
 }, {
-    content: '本地是否能连接代理端口',
+    content: 'http端口',
     color: gray
 }, {
-    content: '能否代理远程地址',
+    content: '能否连上代理服务器',
+    color: gray
+}, {
+    content: '能否通过代理服务器正常上网',
     color: gray
 }];
 
@@ -27,10 +33,10 @@ new Vue({
                 this.request('/client/api/stop', 'get')
             }
         }, initDefaultConfig() {
-            this.request('/server/api/initDefaultConfig', 'get')
+            this.request('/client/api/initDefaultConfig', 'get')
         }, saveConfig() {
             let config = this.editor.getMarkdown()
-            this.request('/server/api/config', 'post',{
+            this.request('/client/api/config', 'post',{
                 config: config,
             })
         }, request(url, method, body, cb) {
@@ -67,31 +73,43 @@ new Vue({
             })
         },getState() {
             var that = this
-            this.request("/server/api/state",'get',null,(res) => {
-                switch (res.state) {
-                    case 1:
-                        that.state[0].color = gray;
-                        that.state[1].color = gray;
-                        that.state[2].color = gray;
-                        that.state[2].color = gray;
-                        return
-                    case 2:
-                        that.state[0].color = green;
-                        that.state[1].color = green;
-                        that.state[2].color = green;
-                        that.state[3].color = gray;
-                        return
-                    case 3:
-                        that.state[0].color = green;
-                        that.state[1].color = green;
-                        that.state[2].color = green;
-                        that.state[3].color = green;
-                        return
+            this.request("/client/api/state",'get',null,(res) => {
+                if(res.state.isRunning) {
+                    this.state[0].color = green
+                } else {
+                    this.state[0].color = red
+                }
+                if(res.state.socks) {
+                    this.state[1].color = green
+                } else {
+                    this.state[1].color = red
+                }
+                if(res.state.http) {
+                    this.state[2].color = green
+                }else{
+                    this.state[2].color = red
+                }
+                if(res.state.connectToServer) {
+                    this.state[3].color = green
+                }else{
+                    this.state[3].color = red
+                }
+                if(res.state.porxyOK) {
+                    this.state[4].color = green
+                }else{
+                    this.state[4].color = red
                 }
             })
         },
         importVmess() {
             this.request("/client/api/vmess",'post',{vmess: this.vmess})
+        },
+        checkUrl() {
+            this.request("/client/api/check",'post',{url: this.url})
+        },configSysProxy() {
+            this.request("/client/api/set_proxy?state=on",'get')
+        },unsetSysProxy() {
+            this.request("/client/api/set_proxy?state=off",'get')
         }
     }, mounted() {
         this.editor = editormd("editor", {
@@ -121,6 +139,9 @@ new Vue({
                 title: "提示", text: '成功', icon: "success"
             })
         });
+
+        const md = markdownit()
+        this.gitHtml = md.render(this.gitTips);
 
         // this.getState()
     }

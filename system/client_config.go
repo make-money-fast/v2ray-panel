@@ -3,6 +3,7 @@ package system
 import (
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"github.com/make-money-fast/v2ray/helpers"
 	"io/ioutil"
 )
@@ -147,4 +148,23 @@ func (c *ClientConfig) GetVmess() string {
 	uid := c.Outbounds[0].Settings.Vnext[0].Users[0].Id
 	net := c.Outbounds[0].StreamSettings.Network
 	return helpers.VMessLink(port, net, uid, ip)
+}
+
+func (c *ClientConfig) GetProxy() (string, string) {
+	if len(c.Inbounds) == 0 {
+		return "", ""
+	}
+	var (
+		httpPxy  string
+		socksPxy string
+	)
+	for _, item := range c.Inbounds {
+		if item.Tag == "http" {
+			httpPxy = fmt.Sprintf("http://localhost:%d", item.Port)
+		}
+		if item.Tag == "socks" {
+			socksPxy = fmt.Sprintf("socks5://localhost:%d", item.Port)
+		}
+	}
+	return httpPxy, socksPxy
 }

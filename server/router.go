@@ -3,14 +3,24 @@ package server
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/make-money-fast/v2ray/helpers"
+	"github.com/make-money-fast/v2ray/web"
+	"html/template"
+	"net/http"
 	"strings"
 )
 
 func StartServer() {
 	g := gin.Default()
-	g.Delims("${{", "}}")
-	g.Static("/static", "web/static")
-	g.LoadHTMLGlob("web/templates/*.gohtml")
+	//g.Delims("${{", "}}")
+	//g.Static("/static", "web/static")
+	//g.LoadHTMLGlob("web/templates/*.gohtml")
+
+	g.Any("/static/*action", func(ctx *gin.Context) {
+		http.FileServer(http.FS(web.Static)).ServeHTTP(ctx.Writer, ctx.Request)
+	})
+
+	g.SetHTMLTemplate(template.Must(template.New("").Delims("${{", "}}").ParseFS(web.Templates, "templates/*")))
+
 	g.Use(serverClientCheck())
 
 	// 1. 启动服务端.
@@ -33,11 +43,18 @@ func StartServer() {
 	client := g.Group("/client")
 	{
 		client.GET("/index", ClientIndex)
-		client.GET("/config.json", ClientConfig)
+		client.GET("/helper", ClientHelper)
+		client.GET("/config.json", ClientConfigJSON)
+		client.GET("/vmess", ClientQRCode)
 
 		client.POST("/api/vmess", ClientImportVmess)
+		client.POST("/api/config", ClientConfig)
+		client.GET("/api/initDefaultConfig", ClientInitDefaultConfig)
 		client.GET("/api/start", ClientStart)
 		client.GET("/api/stop", ClientStop)
+		client.GET("/api/state", ClientState)
+		client.POST("/api/check", ClientCheck)
+		client.GET("/api/set_proxy", SetSysProxy)
 	}
 
 	g.Run(helpers.HttpPort)
