@@ -3,12 +3,20 @@ package system
 import (
 	_ "embed"
 	"encoding/json"
+	"github.com/make-money-fast/v2ray/helpers"
+	"io/ioutil"
 )
 
 var (
 	//go:embed default_client_config.json
 	defaultClientConfig string
 )
+
+type StreamSetting struct {
+	Network    string `json:"networkv"`
+	WsSettings struct {
+	} `json:"wsSettings,omitempty"`
+}
 
 type ClientInBound struct {
 	Tag      string `json:"tag"`
@@ -51,12 +59,8 @@ type ClientConfig struct {
 				Type string `json:"type"`
 			} `json:"response,omitempty"`
 		} `json:"settings"`
-		StreamSettings *struct {
-			Network    string `json:"networkv"`
-			WsSettings struct {
-			} `json:"wsSettings,omitempty"`
-		} `json:"streamSettings,omitempty"`
-		Mux *struct {
+		StreamSettings *StreamSetting `json:"streamSettings,omitempty"`
+		Mux            *struct {
 			Enabled     bool `json:"enabled,omitempty"`
 			Concurrency int  `json:"concurrency,omitempty"`
 		} `json:"mux,omitempty"`
@@ -75,16 +79,72 @@ type ClientConfig struct {
 	} `json:"routing"`
 }
 
+func (c *ClientConfig) GetIntentJSON() string {
+	data, _ := json.MarshalIndent(c, "", "\t")
+	return string(data)
+}
+
 func ClientConfigFromJSON(v string) (*ClientConfig, error) {
 	var cfg ClientConfig
-	err := json.Unmarshal([]byte(v), &cfg)
-	if err != nil {
-		return nil, err
-	}
+	json.Unmarshal([]byte(v), &cfg)
 	return &cfg, nil
+}
+
+func ClientConfigFromVmess(vmess *helpers.Vmess) *ClientConfig {
+	cfg := DefaultClientConfig()
+	cfg.Outbounds[0].Settings.Vnext[0].Address = vmess.Add
+	cfg.Outbounds[0].Settings.Vnext[0].Users[0].Id = vmess.Id
+	cfg.Outbounds[0].Settings.Vnext[0].Port = vmess.Port
+	cfg.Outbounds[0].StreamSettings = &StreamSetting{
+		Network:    vmess.Net,
+		WsSettings: struct{}{},
+	}
+	return cfg
+}
+
+func SaveClientConfig(cfg *ClientConfig) error {
+	path := helpers.GetConfigPath()
+	data, err := json.MarshalIndent(cfg, "", "\t")
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(path, data, 0777)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func DefaultClientConfig() *ClientConfig {
 	cfg, _ := ClientConfigFromJSON(defaultClientConfig)
 	return cfg
+}
+
+func LoadClientConfig() (*ClientConfig, error) {
+	path := helpers.GetConfigPath()
+	data, err := ioutil.ReadFile(path)
+	if err == nil {
+		return ClientConfigFromJSON(string(data))
+	}
+	return DefaultClientConfig(), nil
+}
+
+func (c *ClientConfig) GetVmess() string {
+	if len(c.Outbounds) == 0 {
+		return ""
+	}
+	if len(c.Outbounds[0].Settings.Vnext) == 0 {
+		return ""
+	}
+	if len(c.Outbounds[0].Settings.Vnext[0].Users) == 0 {
+		return ""
+	}
+	if c.Outbounds[0].StreamSettings == nil {
+		return ""
+	}
+	ip := c.Outbounds[0].Settings.Vnext[0].Address
+	port := c.Outbounds[0].Settings.Vnext[0].Port
+	uid := c.Outbounds[0].Settings.Vnext[0].Users[0].Id
+	net := c.Outbounds[0].StreamSettings.Network
+	return helpers.VMessLink(port, net, uid, ip)
 }

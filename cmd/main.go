@@ -16,7 +16,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	helpers.IsServer = true
+	helpers.IsClient = true
 
 	server.StartServer()
 }

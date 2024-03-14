@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
 type Vmess struct {
@@ -31,4 +32,18 @@ func VMessLink(port int, network string, uuid string, address string) string {
 	}
 	data, _ := json.Marshal(vmess)
 	return "vmess://" + base64.StdEncoding.EncodeToString(data)
+}
+
+func FromVmess(link string) (*Vmess, error) {
+	str := strings.TrimPrefix(link, "vmess://")
+	data, err := base64.StdEncoding.DecodeString(str)
+	if err != nil {
+		return nil, err
+	}
+	var vmess Vmess
+	err = json.Unmarshal(data, &vmess)
+	if err != nil {
+		return nil, err
+	}
+	return &vmess, nil
 }

@@ -33,6 +33,11 @@ func StartServer() {
 	client := g.Group("/client")
 	{
 		client.GET("/index", ClientIndex)
+		client.GET("/config.json", ClientConfig)
+
+		client.POST("/api/vmess", ClientImportVmess)
+		client.GET("/api/start", ClientStart)
+		client.GET("/api/stop", ClientStop)
 	}
 
 	g.Run(helpers.HttpPort)
@@ -44,7 +49,7 @@ func serverClientCheck() gin.HandlerFunc {
 			ctx.Next()
 			return
 		}
-		if helpers.IsServer && strings.HasPrefix(ctx.Request.RequestURI, "/client") {
+		if helpers.IsClient && strings.HasPrefix(ctx.Request.RequestURI, "/client") {
 			ctx.Next()
 			return
 		}
