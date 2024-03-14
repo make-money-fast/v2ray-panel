@@ -2,19 +2,20 @@ console.log(data);
 
 const green = '#0bbd87';
 const gray = '#cccccc'
+const red = '#eb5851'
 
 data.editor = null;
 data.state =  [{
-    content: '运行状态',
+    content: '服务器运行状态',
     color: gray
 }, {
     content: '端口是否启动',
     color: gray
 }, {
-    content: '本地是否能连接代理端口',
+    content: '本地代理连接状态',
     color: gray
 }, {
-    content: '能否代理远程地址',
+    content: '能否远程代理',
     color: gray
 }];
 
@@ -68,25 +69,20 @@ new Vue({
         },getState() {
             var that = this
             this.request("/server/api/state",'get',null,(res) => {
-                switch (res.state) {
-                    case 1:
-                        that.state[0].color = gray;
-                        that.state[1].color = gray;
-                        that.state[2].color = gray;
-                        that.state[2].color = gray;
-                        return
-                    case 2:
-                        that.state[0].color = green;
-                        that.state[1].color = green;
-                        that.state[2].color = green;
-                        that.state[3].color = gray;
-                        return
-                    case 3:
-                        that.state[0].color = green;
-                        that.state[1].color = green;
-                        that.state[2].color = green;
-                        that.state[3].color = green;
-                        return
+                if(res.state.isRunning) {
+                    this.state[0].color = green;
+                } else {
+                    this.state[0].color = red;
+                }
+                if(res.state.isPortListing) {
+                    this.state[1].color = green;
+                } else {
+                    this.state[1].color = red;
+                }
+                if(res.state.proxyOK) {
+                    this.state[2].color = green;
+                } else {
+                    this.state[2].color = red;
                 }
             })
         }
@@ -118,7 +114,5 @@ new Vue({
                 title: "提示", text: '成功', icon: "success"
             })
         });
-
-        this.getState()
     }
 })

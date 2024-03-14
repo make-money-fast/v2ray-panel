@@ -86,8 +86,10 @@
                     </el-card>
 
                     <el-card class="box-card mt-2">
-                        <div slot="header" class="clearfix">
+                        <div slot="header" class="clearfix d-flex justify-content-between align-items-center">
                             <span>代理状态 服务端自检</span>
+                            <span><el-button @click="getState" icon="el-icon-refresh-left" type="primary"
+                                             circle></el-button></span>
                         </div>
                         <div class="block">
                             <el-timeline>

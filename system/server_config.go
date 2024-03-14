@@ -20,10 +20,6 @@ var (
 	defaultServerConfig string
 )
 
-const (
-	google = "https://www.google.com"
-)
-
 type ServerConfig struct {
 	Log struct {
 		Access   string `json:"access,omitempty"`
@@ -191,22 +187,25 @@ func SaveConfig(cfg *ServerConfig) error {
 	return ioutil.WriteFile(path, data, 0777)
 }
 
-const (
-	StateServerOff = iota + 1
-	StateServerOn
-	StateProxyOK
-)
+type ServerState struct {
+	IsRunning     bool `json:"isRunning"`
+	IsPortListing bool `json:"isPortListing"`
+	ProxyOK       bool `json:"proxyOK"`
+}
 
 // GetServerProxyState 获取服务端代理状态.
-func GetServerProxyState() int {
+func GetServerProxyState() ServerState {
+	var state ServerState
 	if !IsRunning() {
-		return StateServerOff
+		return state
 	}
+
+	state.IsRunning = true
 
 	// 1. download Client config.
 	rsp, _ := http.Get(fmt.Sprintf("http://localhost%s/server/client.json", helpers.HttpPort))
 	if rsp == nil {
-		return StateServerOn
+		return state
 	}
 	data, _ := ioutil.ReadAll(rsp.Body)
 	rsp.Body.Close()
@@ -218,12 +217,12 @@ func GetServerProxyState() int {
 	}()
 
 	ok := testConnection(path)
-
+	state.IsPortListing = true
 	if ok {
-		return StateProxyOK
+		state.ProxyOK = true
+		return state
 	}
-
-	return StateServerOn
+	return state
 }
 
 func testConnection(path string) bool {
@@ -240,7 +239,7 @@ func testConnection(path string) bool {
 
 	defer clientServer.Close()
 
-	return CheckPorxy(fmt.Sprintf("http://localhost:%d", helpers.ServerTestPort), google)
+	return CheckPorxy(fmt.Sprintf("http://localhost:%d", helpers.ServerTestPort), helpers.TestingUrl)
 }
 
 type ClientState struct {
@@ -294,7 +293,7 @@ func GetClientProxyState() ClientState {
 		state.ConnectToServer = true
 	}
 
-	if CheckPorxy(fmt.Sprintf("http://localhost:%d", httpPort), google) {
+	if CheckPorxy(fmt.Sprintf("http://localhost:%d", httpPort), helpers.TestingUrl) {
 		state.PorxyOK = true
 	}
 	return state

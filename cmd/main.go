@@ -2,19 +2,19 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"github.com/getlantern/systray"
+	"github.com/gin-gonic/gin"
 	"github.com/make-money-fast/v2ray/helpers"
 	"github.com/make-money-fast/v2ray/server"
 	"github.com/make-money-fast/v2ray/system"
 	"github.com/make-money-fast/v2ray/web"
-	"net/http"
 	"os"
-	"time"
 )
 
 func init() {
 	flag.BoolVar(&helpers.IsServer, "server", false, "is server")
-	flag.BoolVar(&helpers.IsClient, "client", false, "is client")
+	flag.BoolVar(&helpers.IsClient, "client", true, "is client")
 
 	flag.StringVar(&helpers.HttpPort, "http-port", ":8091", "HTTP服务端口")
 }
@@ -22,7 +22,17 @@ func init() {
 func main() {
 	flag.Parse()
 
-	helpers.IsClient = true
+	if helpers.IsServer {
+		fmt.Println("运行模式：【服务端】")
+	} else {
+		fmt.Println("运行模式：【客户端】")
+	}
+
+	gin.SetMode(gin.ReleaseMode)
+
+	fmt.Println("自动启动服务中....")
+	system.Start(helpers.GetConfigPath())
+
 	if helpers.IsClient {
 		mainGUI()
 	} else {
@@ -36,10 +46,6 @@ func mainGUI() {
 
 		go func() {
 			server.StartServer()
-		}()
-		go func() {
-			time.Sleep(3 * time.Second)
-			http.Get("http://localhost" + helpers.HttpPort + "/client/api/start")
 		}()
 
 		ico, _ := web.Static.ReadFile("static/favicon.ico")

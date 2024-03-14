@@ -142,7 +142,5 @@ new Vue({
 
         const md = markdownit()
         this.gitHtml = md.render(this.gitTips);
-
-        // this.getState()
     }
 })
