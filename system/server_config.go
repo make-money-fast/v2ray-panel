@@ -95,7 +95,9 @@ func (c ServerConfig) GetUUID() string {
 func (c ServerConfig) GetNetwork() string {
 	var data string
 	if len(c.Inbounds) > 0 {
-		data = c.Inbounds[0].StreamSettings.Network
+		if c.Inbounds[0].StreamSettings != nil {
+			data = c.Inbounds[0].StreamSettings.Network
+		}
 	}
 	return data
 }
