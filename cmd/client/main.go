@@ -9,6 +9,7 @@ import (
 	"github.com/make-money-fast/v2ray/system"
 	"github.com/make-money-fast/v2ray/web"
 	"os"
+	"time"
 )
 
 func init() {
@@ -21,6 +22,11 @@ func main() {
 
 	fmt.Println("运行模式：【客户端】")
 	fmt.Println("自动启动服务中....")
+
+	go func() {
+		time.Sleep(1 * time.Second)
+		server.OpenBrowser()
+	}()
 	go func() {
 		system.Start(helpers.GetConfigPath())
 	}()
