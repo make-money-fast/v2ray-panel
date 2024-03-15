@@ -20,7 +20,7 @@ func main() {
 	flag.Parse()
 	fmt.Println("运行模式：【服务端】")
 	ip := helpers.GetMyIP()
-	fmt.Println(fmt.Sprintf("管理端地址: http://%s:%s%s%s", helpers.Username, helpers.Password, ip, helpers.HttpPort))
+	fmt.Println(fmt.Sprintf("管理端地址: http://%s:%s@%s%s/server/index", helpers.Username, helpers.Password, ip, helpers.HttpPort))
 	gin.SetMode(gin.ReleaseMode)
 
 	go func() {

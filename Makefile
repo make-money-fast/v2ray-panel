@@ -19,3 +19,6 @@ service_stop:
 
 service_restart:
 	@systemctl restart v2ray-panel.service
+
+log:
+	@grep "v2ray-panel" /var/log/syslog
