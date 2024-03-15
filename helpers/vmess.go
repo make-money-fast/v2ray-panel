@@ -4,20 +4,22 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"strings"
 )
 
 type Vmess struct {
-	Port int    `json:"port"`
-	Type string `json:"type"`
-	Net  string `json:"net"`
-	Ps   string `json:"ps"`
-	Aid  string `json:"aid"`
-	Id   string `json:"id"`
-	Path string `json:"path"`
-	Add  string `json:"add"`
-	Host string `json:"host"`
-	Tls  string `json:"tls"`
+	Port   int    `json:"port"`
+	Type   string `json:"type"`
+	Net    string `json:"net"`
+	Ps     string `json:"ps"`
+	Aid    string `json:"aid"`
+	Id     string `json:"id"`
+	Path   string `json:"path"`
+	Add    string `json:"add"`
+	Host   string `json:"host"`
+	Tls    string `json:"tls"`
+	Enable bool   `json:"enable"`
 }
 
 func VMessLink(port int, network string, uuid string, address string) string {
@@ -46,4 +48,22 @@ func FromVmess(link string) (*Vmess, error) {
 		return nil, err
 	}
 	return &vmess, nil
+}
+
+func GetVmessList() []*Vmess {
+	data, err := ioutil.ReadFile("vmess.json")
+	if err != nil {
+		return nil
+	}
+	var list []*Vmess
+	json.Unmarshal(data, &list)
+	return list
+}
+
+func SaveVmessList(list []*Vmess) {
+	data, err := json.MarshalIndent(list, "", "\t")
+	if err != nil {
+		return
+	}
+	ioutil.WriteFile("vmess.json", data, 0777)
 }

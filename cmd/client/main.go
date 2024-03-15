@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"github.com/getlantern/systray"
-	"github.com/gin-gonic/gin"
 	"github.com/make-money-fast/v2ray/helpers"
 	"github.com/make-money-fast/v2ray/server"
 	"github.com/make-money-fast/v2ray/system"
@@ -21,7 +20,6 @@ func main() {
 	flag.Parse()
 
 	fmt.Println("运行模式：【客户端】")
-	gin.SetMode(gin.ReleaseMode)
 	fmt.Println("自动启动服务中....")
 	go func() {
 		system.Start(helpers.GetConfigPath())

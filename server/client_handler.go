@@ -19,9 +19,19 @@ var helper string
 func ClientIndex(ctx *gin.Context) {
 	cfg, _ := system2.LoadClientConfig()
 	httpPxy, socksPxy := cfg.GetProxy()
+	var srvAddr string
+	if len(cfg.Outbounds) > 0 && len(cfg.Outbounds[0].Settings.Vnext) > 0 {
+		addr := cfg.Outbounds[0].Settings.Vnext[0].Address
+		pot := cfg.Outbounds[0].Settings.Vnext[0].Port
+		srvAddr = fmt.Sprintf("%s:%d", addr, pot)
+	}
+
+	//list := helpers2.GetVmessList()
 	ctx.HTML(200, "client_index.gohtml", gin.H{
 		"configPath": helpers2.GetConfigPath(),
 		"config":     cfg,
+		//"vmessList":  list,
+		"srvAddr":    srvAddr,
 		"isRunning":  system2.IsRunning(),
 		"configJSON": cfg.GetIntentJSON(),
 		"version":    system2.Version,
@@ -62,6 +72,10 @@ func ClientImportVmess(ctx *gin.Context) {
 		})
 		return
 	}
+
+	//list := helpers2.GetVmessList()
+	//list = append(list, vmess)
+	//helpers2.SaveVmessList(list)
 
 	ctx.JSON(200, gin.H{
 		"code": 0,

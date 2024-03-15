@@ -3,23 +3,21 @@ package server
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/make-money-fast/v2ray/helpers"
-	"github.com/make-money-fast/v2ray/web"
-	"html/template"
-	"net/http"
 	"strings"
 )
 
 func StartServer() {
 	g := gin.Default()
-	//g.Delims("${{", "}}")
-	//g.Static("/static", "web/static")
-	//g.LoadHTMLGlob("web/templates/*.gohtml")
+	//gin.SetMode(gin.ReleaseMode)
+	g.Delims("${{", "}}")
+	g.Static("/static", "web/static")
+	g.LoadHTMLGlob("web/templates/*.gohtml")
 
-	g.Any("/static/*action", func(ctx *gin.Context) {
-		http.FileServer(http.FS(web.Static)).ServeHTTP(ctx.Writer, ctx.Request)
-	})
-
-	g.SetHTMLTemplate(template.Must(template.New("").Delims("${{", "}}").ParseFS(web.Templates, "templates/*")))
+	//g.Any("/static/*action", func(ctx *gin.Context) {
+	//	http.FileServer(http.FS(web.Static)).ServeHTTP(ctx.Writer, ctx.Request)
+	//})
+	//
+	//g.SetHTMLTemplate(template.Must(template.New("").Delims("${{", "}}").ParseFS(web.Templates, "templates/*")))
 
 	g.Use(serverClientCheck())
 

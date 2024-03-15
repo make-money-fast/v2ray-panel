@@ -16,6 +16,7 @@
 <body>
 
 <div id="app" style="width: 80%;margin: auto;margin-top: 24px;">
+
     <div class="row">
         <div class="col-md-12">
             <el-card class="box-card">
@@ -34,6 +35,10 @@
                 <div class="d-flex justify-content-between mt-2">
                     <span>配置文件路径</span>
                     <el-tag type="success">{{ configPath }}</el-tag>
+                </div>
+                <div class="d-flex justify-content-between mt-2">
+                    <span>服务器信息</span>
+                    <el-tag type="success" class="copy">{{ srvAddr }}</el-tag>
                 </div>
                 <div class="d-flex justify-content-between mt-2">
                     <span>http代理</span>
@@ -68,81 +73,82 @@
                     <el-link target="_blank" type="warning" class="mx-2" href="/client/helper">帮助页</el-link>
                 </div>
             </el-card>
-            <div class="row">
-                <div class="col-md-8">
-                    <el-card class="box-card mt-2">
-                        <div slot="header" class="clearfix">
-                            <span>V2ray 客户端管理面板</span>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <div id="editor"></div>
-                        </div>
+        </div>
+    </div>
 
-                        <div class="d-flex flex-column justify-content-between mt-2">
-                            <h6>tips</h6>
-                            <div class="p-4 markdown-body" v-html='gitHtml'></div>
-                        </div>
-                    </el-card>
+    <div class="row">
+        <div class="col-md-8">
+            <el-card class="box-card mt-2">
+                <div slot="header" class="clearfix">
+                    <span>V2ray 客户端管理面板</span>
                 </div>
-                <div class="col-md-4">
-                    <el-card class="box-card mt-2">
-                        <div slot="header" class="clearfix">
-                            <span>Vmess信息</span>
-                        </div>
-                        <el-image src="/client/vmess"></el-image>
-                    </el-card>
-
-                    <el-card class="box-card mt-2">
-                        <div slot="header" class="clearfix">
-                            <span>V2ray 客户端管理面板</span>
-                        </div>
-                        <div>
-                            <h3>配置修改点</h3>
-                            <div class="d-flex justify-content-between">
-                                <p class="fs-6">socks: <code>inbounds[0][tag=scoks].port</code></p>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <p class="fs-6">http: <code>inbounds[0][tag=http].port</code></p>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <p class="fs-6">服务器端口:<code>vnext.address</code></p>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <p class="fs-6">服务器ip:<code>vnext.ip</code></p>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <p class="fs-6">服务器uid:<code>vnext.users.id</code></p>
-                            </div>
-                        </div>
-                        <div>
-                            <el-button type="primary" @click="initDefaultConfig">初始化配置</el-button>
-                            <el-button type="primary" @click="saveConfig">保存配置</el-button>
-                        </div>
-                    </el-card>
-
-                    <el-card class="box-card mt-2">
-                        <div slot="header" class="clearfix d-flex justify-content-between align-items-center">
-                            <span>代理状态 客户端自检</span>
-                            <span><el-button @click="getState" icon="el-icon-refresh-left" type="primary"
-                                             circle></el-button></span>
-                        </div>
-                        <div class="block">
-                            <el-timeline>
-                                <el-timeline-item
-                                        v-for="(activity, index) in state"
-                                        :key="index"
-                                        :icon="activity.icon"
-                                        :type="activity.type"
-                                        :color="activity.color"
-                                        :size="activity.size"
-                                        :timestamp="activity.timestamp">
-                                    {{activity.content}}
-                                </el-timeline-item>
-                            </el-timeline>
-                        </div>
-                    </el-card>
+                <div class="d-flex justify-content-between">
+                    <div id="editor"></div>
                 </div>
-            </div>
+
+                <div class="d-flex flex-column justify-content-between mt-2">
+                    <h6>tips</h6>
+                    <div class="p-4 markdown-body" v-html='gitHtml'></div>
+                </div>
+            </el-card>
+        </div>
+        <div class="col-md-4">
+            <el-card class="box-card mt-2">
+                <div slot="header" class="clearfix">
+                    <span>Vmess信息</span>
+                </div>
+                <el-image src="/client/vmess"></el-image>
+            </el-card>
+
+            <el-card class="box-card mt-2">
+                <div slot="header" class="clearfix">
+                    <span>V2ray 客户端管理面板</span>
+                </div>
+                <div>
+                    <h3>配置修改点</h3>
+                    <div class="d-flex justify-content-between">
+                        <p class="fs-6">socks: <code>inbounds[0][tag=scoks].port</code></p>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <p class="fs-6">http: <code>inbounds[0][tag=http].port</code></p>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <p class="fs-6">服务器端口:<code>vnext.address</code></p>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <p class="fs-6">服务器ip:<code>vnext.ip</code></p>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <p class="fs-6">服务器uid:<code>vnext.users.id</code></p>
+                    </div>
+                </div>
+                <div>
+                    <el-button type="primary" @click="initDefaultConfig">初始化配置</el-button>
+                    <el-button type="primary" @click="saveConfig">保存配置</el-button>
+                </div>
+            </el-card>
+
+            <el-card class="box-card mt-2">
+                <div slot="header" class="clearfix d-flex justify-content-between align-items-center">
+                    <span>代理状态 客户端自检</span>
+                    <span><el-button @click="getState" icon="el-icon-refresh-left" type="primary"
+                                     circle></el-button></span>
+                </div>
+                <div class="block">
+                    <el-timeline>
+                        <el-timeline-item
+                                v-for="(activity, index) in state"
+                                :key="index"
+                                :icon="activity.icon"
+                                :type="activity.type"
+                                :color="activity.color"
+                                :size="activity.size"
+                                :timestamp="activity.timestamp">
+                            {{activity.content}}
+                        </el-timeline-item>
+                    </el-timeline>
+                </div>
+            </el-card>
         </div>
     </div>
 </div>

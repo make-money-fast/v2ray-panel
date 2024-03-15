@@ -14,7 +14,7 @@ var (
 )
 
 type StreamSetting struct {
-	Network    string `json:"networkv"`
+	Network    string `json:"network"`
 	WsSettings struct {
 	} `json:"wsSettings,omitempty"`
 }
