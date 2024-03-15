@@ -24,6 +24,7 @@ func ServerIndex(ctx *gin.Context) {
 		"uuid":       uuid,
 		"configJSON": cfg.GetIntentJSON(),
 		"version":    system2.Version,
+		"token":      helpers2.Username + helpers2.Password,
 	})
 }
 

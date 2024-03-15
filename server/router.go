@@ -26,21 +26,24 @@ func StartServer() {
 
 	// 1. 启动服务端.
 	server := g.Group("/server")
-	server.Use(gin.BasicAuth(gin.Accounts{
-		helpers.Username: helpers.Password,
-	}))
 	{
-		server.GET("/index", ServerIndex)
+		basic := server.Group("/")
+		basic.Use(gin.BasicAuth(gin.Accounts{
+			helpers.Username: helpers.Password,
+		}))
+		{
+			basic.GET("/index", ServerIndex)
+		}
+
+		server.GET("/config.json", ServerConfigJSON)
+		server.GET("/client.json", ServerConfigToClientJSON)
+		server.GET("/vmess", ServeQRCode)
 		server.GET("/api/start", ServerStart)
 		server.GET("/api/stop", ServerStop)
 		server.GET("/api/reload", ServerReload)
 		server.POST("/api/config", ServerConfig)
 		server.GET("/api/initDefaultConfig", ServerInitDefaultConfig)
-		server.GET("/config.json", ServerConfigJSON)
-		server.GET("/client.json", ServerConfigToClientJSON)
 		server.GET("/api/state", GetServerProxyState)
-
-		server.GET("/vmess", ServeQRCode)
 	}
 
 	// 2. 启动客户端
