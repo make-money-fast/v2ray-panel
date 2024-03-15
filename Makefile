@@ -1,3 +1,5 @@
+.PHONY: server client
+
 client:
 	@go build -o bin/v2ray-panel-cilent cmd/client/main.go
 
