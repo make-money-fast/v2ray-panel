@@ -12,11 +12,15 @@ import (
 func init() {
 	flag.BoolVar(&helpers.IsServer, "server", true, "is server")
 	flag.StringVar(&helpers.HttpPort, "http-port", ":8091", "HTTP服务端口")
+	flag.StringVar(&helpers.Username, "u", "admin", "web端账号")
+	flag.StringVar(&helpers.Password, "p", "admin123", "web端密码")
 }
 
 func main() {
 	flag.Parse()
 	fmt.Println("运行模式：【服务端】")
+	ip := helpers.GetMyIP()
+	fmt.Println(fmt.Sprintf("管理端地址: http://%s:%s%s%s", helpers.Username, helpers.Password, ip, helpers.HttpPort))
 	gin.SetMode(gin.ReleaseMode)
 
 	go func() {

@@ -12,6 +12,9 @@ var (
 	IsClient   bool
 	ConfigPath string
 	TestingUrl = "https://www.google.com"
+
+	Username string = "admin"
+	Password string = "admin123"
 )
 
 func init() {
