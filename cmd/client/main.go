@@ -13,31 +13,21 @@ import (
 )
 
 func init() {
-	flag.BoolVar(&helpers.IsServer, "server", false, "is server")
 	flag.BoolVar(&helpers.IsClient, "client", true, "is client")
-
 	flag.StringVar(&helpers.HttpPort, "http-port", ":8091", "HTTP服务端口")
 }
 
 func main() {
 	flag.Parse()
 
-	if helpers.IsServer {
-		fmt.Println("运行模式：【服务端】")
-	} else {
-		fmt.Println("运行模式：【客户端】")
-	}
-
+	fmt.Println("运行模式：【客户端】")
 	gin.SetMode(gin.ReleaseMode)
-
 	fmt.Println("自动启动服务中....")
-	system.Start(helpers.GetConfigPath())
+	go func() {
+		system.Start(helpers.GetConfigPath())
+	}()
 
-	if helpers.IsClient {
-		mainGUI()
-	} else {
-		server.StartServer()
-	}
+	mainGUI()
 }
 
 func mainGUI() {
