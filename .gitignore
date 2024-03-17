@@ -4,3 +4,4 @@ bazel-*
 *.log
 config.json
 bin/
+*.syso
