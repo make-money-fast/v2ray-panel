@@ -5,3 +5,4 @@ bazel-*
 config.json
 bin/
 *.syso
+targets
