@@ -1,11 +1,11 @@
-package system
+package configs
 
 import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
 	"github.com/clearcodecn/v2ray-core/v2raystart"
-	"github.com/make-money-fast/v2ray/helpers"
+	"github.com/make-money-fast/v2ray/pkg/vars"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -113,7 +113,7 @@ func (c ServerConfig) ToTestClientConfig() *ClientConfig {
 	var inbound []ClientInBound
 	for _, in := range client.Inbounds {
 		if in.Tag == "http" {
-			in.Port = helpers.ServerTestPort
+			in.Port = vars.ServerTestPort
 			in.Listen = "127.0.0.1"
 			inbound = append(inbound, in)
 		}
@@ -158,15 +158,15 @@ func dumpDefaultServerConfig(path string) string {
 }
 
 func LoadServerConfig() string {
-	data, err := ioutil.ReadFile(helpers.ConfigPath)
+	data, err := ioutil.ReadFile(vars.ConfigPath)
 	if err != nil {
-		data = []byte(dumpDefaultServerConfig(helpers.ConfigPath))
+		data = []byte(dumpDefaultServerConfig(vars.ConfigPath))
 	}
 	return string(data)
 }
 
 func LoadServerConfigStruct() *ServerConfig {
-	path := helpers.GetConfigPath()
+	path := vars.GetConfigPath()
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		os.MkdirAll(filepath.Dir(path), 0777)
@@ -182,7 +182,7 @@ func SaveConfig(cfg *ServerConfig) error {
 	if err != nil {
 		return err
 	}
-	path := helpers.GetConfigPath()
+	path := vars.GetConfigPath()
 	os.MkdirAll(filepath.Dir(path), 0777)
 	return ioutil.WriteFile(path, data, 0777)
 }
@@ -203,7 +203,7 @@ func GetServerProxyState() ServerState {
 	state.IsRunning = true
 
 	// 1. download Client config.
-	rsp, _ := http.Get(fmt.Sprintf("http://localhost%s/server/client.json", helpers.HttpPort))
+	rsp, _ := http.Get(fmt.Sprintf("http://localhost%s/server/client.json", vars.HttpPort))
 	if rsp == nil {
 		return state
 	}
@@ -239,7 +239,7 @@ func testConnection(path string) bool {
 
 	defer clientServer.Close()
 
-	return CheckPorxy(fmt.Sprintf("http://localhost:%d", helpers.ServerTestPort), helpers.TestingUrl)
+	return CheckPorxy(fmt.Sprintf("http://localhost:%d", vars.ServerTestPort), vars.TestingUrl)
 }
 
 type ClientState struct {
@@ -293,7 +293,7 @@ func GetClientProxyState() ClientState {
 		state.ConnectToServer = true
 	}
 
-	if CheckPorxy(fmt.Sprintf("http://localhost:%d", httpPort), helpers.TestingUrl) {
+	if CheckPorxy(fmt.Sprintf("http://localhost:%d", httpPort), vars.TestingUrl) {
 		state.PorxyOK = true
 	}
 	return state

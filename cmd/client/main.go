@@ -4,31 +4,27 @@ import (
 	"flag"
 	"fmt"
 	"github.com/getlantern/systray"
-	"github.com/make-money-fast/v2ray/helpers"
-	"github.com/make-money-fast/v2ray/server"
-	"github.com/make-money-fast/v2ray/system"
+	"github.com/make-money-fast/v2ray/pkg/configs"
+	helpers2 "github.com/make-money-fast/v2ray/pkg/helpers"
+	"github.com/make-money-fast/v2ray/pkg/menus"
+	server2 "github.com/make-money-fast/v2ray/pkg/server"
+	"github.com/make-money-fast/v2ray/pkg/vars"
 	"github.com/make-money-fast/v2ray/web"
-	"os"
-	"time"
 )
 
 func init() {
-	flag.BoolVar(&helpers.IsClient, "client", true, "is client")
-	flag.StringVar(&helpers.HttpPort, "http-port", ":8091", "HTTP服务端口")
+	flag.StringVar(&vars.HttpPort, "http-port", ":8091", "HTTP服务端口")
 }
 
 func main() {
+	vars.IsClient = true
 	flag.Parse()
 
 	fmt.Println("运行模式：【客户端】")
 	fmt.Println("自动启动服务中....")
 
 	go func() {
-		time.Sleep(1 * time.Second)
-		server.OpenBrowser()
-	}()
-	go func() {
-		system.Start(helpers.GetConfigPath())
+		configs.Start(vars.GetConfigPath())
 	}()
 
 	mainGUI()
@@ -36,29 +32,16 @@ func main() {
 
 func mainGUI() {
 	systray.Run(func() {
-		helpers.UnSetProxy()
+		helpers2.UnSetProxy()
 
 		go func() {
-			server.StartServer()
+			server2.StartServer()
 		}()
 
-		ico, _ := web.Static.ReadFile("static/favicon.ico")
+		ico, _ := web.Static.ReadFile("static/favicon.png")
 
 		systray.SetTemplateIcon(ico, ico)
-		systray.SetTitle("v2")
 		systray.SetTooltip("v2-client")
-
-		webBar := systray.AddMenuItem("web", "打开管理面板")
-		exitBar := systray.AddMenuItem("exit", "退出")
-
-		for {
-			select {
-			case <-webBar.ClickedCh:
-				server.OpenBrowser()
-			case <-exitBar.ClickedCh:
-				system.Stop()
-				os.Exit(0)
-			}
-		}
+		menus.SetMenus()
 	}, nil)
 }

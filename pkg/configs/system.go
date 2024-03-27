@@ -1,4 +1,4 @@
-package system
+package configs
 
 import (
 	_ "embed"

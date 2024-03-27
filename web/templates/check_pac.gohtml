@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>CheckPac</title>
+    <link rel="stylesheet" href="/static/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/css/element-ui.min.css">
+</head>
+<body>
+
+<div class="container" id="app">
+    <el-card class="mx-auto">
+        <div>
+            <el-input v-model="address"></el-input>
+        </div>
+
+        <div class="mt-4">
+            <el-button @click="check">测试</el-button>
+        </div>
+
+        <div>
+            {{ result }}
+        </div>
+
+    </el-card>
+</div>
+
+<script src="/static/js/vue.min.js"></script>
+<script src="/static/js/element-ui.js"></script>
+<script src="/client/pac.js"></script>
+<script>
+    if(typeof isInNet == 'undefined') {
+        function isInNet() {
+            return false;
+        }
+    }
+    if(typeof dnsResolve == 'undefined') {
+        function dnsResolve() {
+            return false;
+        }
+    }
+
+    new Vue({
+        el: '#app',
+        data () {
+            return {
+                address: 'www.google.com',
+                result: '',
+            }
+        },methods: {
+            check() {
+               this.result = FindProxyForURL("",this.address)
+            }
+        }
+    })
+</script>
+</body>
+</html>

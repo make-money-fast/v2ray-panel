@@ -1,10 +1,11 @@
-package system
+package configs
 
 import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"github.com/make-money-fast/v2ray/helpers"
+	helpers2 "github.com/make-money-fast/v2ray/pkg/helpers"
+	"github.com/make-money-fast/v2ray/pkg/vars"
 	"io/ioutil"
 )
 
@@ -85,17 +86,27 @@ func (c *ClientConfig) GetIntentJSON() string {
 	return string(data)
 }
 
+func (cfg *ClientConfig) GetServerAddress() (string, int) {
+	if len(cfg.Outbounds) > 0 && len(cfg.Outbounds[0].Settings.Vnext) > 0 {
+		addr := cfg.Outbounds[0].Settings.Vnext[0].Address
+		pot := cfg.Outbounds[0].Settings.Vnext[0].Port
+		return addr, pot
+	}
+
+	return "", 0
+}
+
 func ClientConfigFromJSON(v string) (*ClientConfig, error) {
 	var cfg ClientConfig
 	json.Unmarshal([]byte(v), &cfg)
 	return &cfg, nil
 }
 
-func ClientConfigFromVmess(vmess *helpers.Vmess) *ClientConfig {
+func ClientConfigFromVmess(vmess *helpers2.Vmess) *ClientConfig {
 	cfg := DefaultClientConfig()
 	cfg.Outbounds[0].Settings.Vnext[0].Address = vmess.Add
 	cfg.Outbounds[0].Settings.Vnext[0].Users[0].Id = vmess.Id
-	cfg.Outbounds[0].Settings.Vnext[0].Port = vmess.Port
+	cfg.Outbounds[0].Settings.Vnext[0].Port = vmess.Port.IntVal()
 	cfg.Outbounds[0].StreamSettings = &StreamSetting{
 		Network:    vmess.Net,
 		WsSettings: struct{}{},
@@ -104,7 +115,7 @@ func ClientConfigFromVmess(vmess *helpers.Vmess) *ClientConfig {
 }
 
 func SaveClientConfig(cfg *ClientConfig) error {
-	path := helpers.GetConfigPath()
+	path := vars.GetConfigPath()
 	data, err := json.MarshalIndent(cfg, "", "\t")
 	if err != nil {
 		return err
@@ -122,7 +133,7 @@ func DefaultClientConfig() *ClientConfig {
 }
 
 func LoadClientConfig() (*ClientConfig, error) {
-	path := helpers.GetConfigPath()
+	path := vars.GetConfigPath()
 	data, err := ioutil.ReadFile(path)
 	if err == nil {
 		return ClientConfigFromJSON(string(data))
@@ -147,7 +158,7 @@ func (c *ClientConfig) GetVmess() string {
 	port := c.Outbounds[0].Settings.Vnext[0].Port
 	uid := c.Outbounds[0].Settings.Vnext[0].Users[0].Id
 	net := c.Outbounds[0].StreamSettings.Network
-	return helpers.VMessLink(port, net, uid, ip)
+	return helpers2.VMessLink(port, net, uid, ip)
 }
 
 func (c *ClientConfig) GetProxy() (string, string) {

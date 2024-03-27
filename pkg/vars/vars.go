@@ -1,6 +1,7 @@
-package helpers
+package vars
 
 import (
+	"fmt"
 	"net"
 	"os"
 	"path/filepath"
@@ -40,4 +41,8 @@ func GetConfigPath() string {
 		path = filepath.Join(wd, "config.json")
 	}
 	return path
+}
+
+func GetPacAddress() string {
+	return fmt.Sprintf("http://localhost%s/client/pac.js?t=%d", HttpPort, time.Now().Unix())
 }
